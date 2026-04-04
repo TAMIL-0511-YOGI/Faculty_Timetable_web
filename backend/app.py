@@ -1,12 +1,14 @@
+import os
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from database import add_teacher, add_subject, get_all_teachers, clear_all, delete_subject, update_subject, save_timetable
 from scheduler import generate
 from export import export_excel, export_pdf
-import os
 
-# ✅ Point to 'frontend' folder at repo root
-app = Flask(__name__, static_folder='frontend', static_url_path='')
+# ✅ Resolve absolute path to repo root
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'frontend'), static_url_path='')
 CORS(app)
 
 latest_timetable = None
@@ -14,12 +16,12 @@ latest_timetable = None
 # ✅ Serve index.html
 @app.route("/")
 def index():
-    return send_from_directory('frontend', 'index.html')
+    return send_from_directory(os.path.join(BASE_DIR, 'frontend'), 'index.html')
 
 # ✅ Serve static files (CSS, JS)
 @app.route("/<path:filename>")
 def static_files(filename):
-    return send_from_directory('frontend', filename)
+    return send_from_directory(os.path.join(BASE_DIR, 'frontend'), filename)
 
 @app.route("/api/teachers", methods=["GET"])
 def get_teachers():
