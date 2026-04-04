@@ -5,24 +5,24 @@ from scheduler import generate
 from export import export_excel, export_pdf
 import os
 
-app = Flask(__name__, static_folder='../frontend', static_url_path='')
+# ✅ Point to 'frontend' folder at repo root
+app = Flask(__name__, static_folder='frontend', static_url_path='')
 CORS(app)
 
 latest_timetable = None
 
+# ✅ Serve index.html
 @app.route("/")
 def index():
-    """Serve the main index.html"""
-    return send_from_directory('../frontend', 'index.html')
+    return send_from_directory('frontend', 'index.html')
 
+# ✅ Serve static files (CSS, JS)
 @app.route("/<path:filename>")
 def static_files(filename):
-    """Serve static files (CSS, JS)"""
-    return send_from_directory('../frontend', filename)
+    return send_from_directory('frontend', filename)
 
 @app.route("/api/teachers", methods=["GET"])
 def get_teachers():
-    """Get all teachers with their subjects"""
     try:
         teachers = get_all_teachers()
         return jsonify([t.to_dict() for t in teachers])
@@ -31,7 +31,6 @@ def get_teachers():
 
 @app.route("/api/teachers", methods=["POST"])
 def create_teacher():
-    """Add a new teacher"""
     try:
         data = request.json
         teacher_id = data.get("teacher_id")
@@ -47,10 +46,8 @@ def create_teacher():
 
 @app.route("/api/subjects", methods=["POST"])
 def create_subject():
-    """Add a subject to a teacher"""
     try:
         data = request.json
-        
         required_fields = ["subject_name", "year", "section", "hours_per_week", "teacher_id"]
         if not all(field in data for field in required_fields):
             return jsonify({"error": f"Missing required fields: {required_fields}"}), 400
@@ -62,31 +59,24 @@ def create_subject():
             hours_per_week=int(data.get("hours_per_week")),
             teacher_id=data.get("teacher_id"),
             is_lab=int(data.get("is_lab", 0)),
-            lab_days=data.get("lab_days", "0")  # Default: Monday only
+            lab_days=data.get("lab_days", "0")
         )
-        
         return jsonify({"message": "Subject added successfully"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/generate", methods=["POST"])
 def gen_timetable():
-    """Generate timetable for all teachers"""
     global latest_timetable
-    
     try:
         teachers = get_all_teachers()
-        
         if not teachers:
             return jsonify({"error": "No teachers found. Please add teachers and subjects first."}), 400
         
         latest_timetable = generate(teachers)
         save_timetable(latest_timetable)
         
-        # Format for frontend
-        formatted_timetable = {}
-        for teacher_id, schedule in latest_timetable.items():
-            formatted_timetable[teacher_id] = schedule
+        formatted_timetable = {teacher_id: schedule for teacher_id, schedule in latest_timetable.items()}
         
         return jsonify({
             "success": True,
@@ -98,11 +88,9 @@ def gen_timetable():
 
 @app.route("/api/download/excel", methods=["GET"])
 def download_excel():
-    """Download timetable as Excel"""
     try:
         if latest_timetable is None:
             return jsonify({"error": "No timetable generated yet"}), 400
-        
         export_excel(latest_timetable)
         return send_file("timetable.xlsx", as_attachment=True)
     except Exception as e:
@@ -110,11 +98,9 @@ def download_excel():
 
 @app.route("/api/download/pdf", methods=["GET"])
 def download_pdf():
-    """Download timetable as PDF"""
     try:
         if latest_timetable is None:
             return jsonify({"error": "No timetable generated yet"}), 400
-        
         export_pdf(latest_timetable)
         return send_file("timetable.pdf", as_attachment=True)
     except Exception as e:
@@ -122,7 +108,6 @@ def download_pdf():
 
 @app.route("/api/subjects/<int:subject_id>", methods=["DELETE"])
 def remove_subject(subject_id):
-    """Delete a specific subject"""
     try:
         delete_subject(subject_id)
         return jsonify({"message": "Subject deleted successfully"}), 200
@@ -131,10 +116,8 @@ def remove_subject(subject_id):
 
 @app.route("/api/subjects/<int:subject_id>", methods=["PUT"])
 def edit_subject(subject_id):
-    """Update a specific subject"""
     try:
         data = request.json
-        
         update_subject(
             subject_id=subject_id,
             subject_name=data.get("subject_name"),
@@ -143,14 +126,12 @@ def edit_subject(subject_id):
             hours_per_week=int(data.get("hours_per_week")),
             is_lab=int(data.get("is_lab", 0))
         )
-        
         return jsonify({"message": "Subject updated successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/clear", methods=["POST"])
 def clear_data():
-    """Clear all teachers and subjects"""
     try:
         clear_all()
         global latest_timetable
@@ -159,7 +140,7 @@ def clear_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# ✅ Correct Railway port binding
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))   # Railway provides PORT
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
