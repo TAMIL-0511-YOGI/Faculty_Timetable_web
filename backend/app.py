@@ -9,7 +9,8 @@ from export import export_excel, export_pdf
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'frontend'), static_url_path='')
-CORS(app)
+CORS(app, origins=["https://faculty-timetable-web-udml.vercel.app"])
+
 
 latest_timetable = None
 
