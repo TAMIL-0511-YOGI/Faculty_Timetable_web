@@ -1,8 +1,9 @@
-// Use environment variable if available, otherwise fallback to localhost
+// Use environment variable if available, otherwise use the deployed backend URL.
+// If you deploy the frontend separately, replace the fallback with your Render backend URL.
 const API_BASE =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL)
+  (typeof process !== "undefined" && process.env && process.env.NEXT_PUBLIC_API_URL)
     ? process.env.NEXT_PUBLIC_API_URL + "/api"
-    : "http://localhost:5000/api";
+    : "https://faculty-timetable-web-1.onrender.com/api"; // <-- replace with your real render backend URL
 
 // Period timings (50 mins each)
 const PERIOD_TIMINGS = {

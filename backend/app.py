@@ -9,8 +9,17 @@ from export import export_excel, export_pdf
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'frontend'), static_url_path='')
-CORS(app, origins=["https://faculty-timetable-web-udml.vercel.app"])
 
+# Allow frontend requests from the deployed Vercel app plus local dev origins.
+# Replace or extend this list if your frontend uses another production domain.
+allowed_origins = [
+    "https://faculty-timetable-web-udml.vercel.app",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 
 latest_timetable = None
 
